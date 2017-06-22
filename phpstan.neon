@@ -1,10 +1,10 @@
-
 parameters:
     level: 6
     paths:
         - src
     excludePaths:
         - vendor
+    reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - identifier: missingType.iterableValue
-        - '#will always evaluate to false#'
+        - '#will always evaluate to (true|false)#'
