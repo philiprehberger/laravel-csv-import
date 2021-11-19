@@ -1,6 +1,6 @@
 {
     "name": "philiprehberger/laravel-csv-import",
-    "description": "Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support.",
+    "description": "Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support",
     "type": "library",
     "license": "MIT",
     "keywords": [
