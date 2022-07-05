@@ -1,33 +1,17 @@
-# laravel-csv-import
+# Laravel CSV Import
 
 [![Tests](https://github.com/philiprehberger/laravel-csv-import/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/laravel-csv-import/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-csv-import.svg)](https://packagist.org/packages/philiprehberger/laravel-csv-import)
-[![PHP Version Require](https://img.shields.io/packagist/php-v/philiprehberger/laravel-csv-import.svg)](https://packagist.org/packages/philiprehberger/laravel-csv-import)
-[![License](https://img.shields.io/github/license/philiprehberger/laravel-csv-import.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/philiprehberger/laravel-csv-import)](LICENSE)
 
-Chunked CSV import for Laravel with row-level validation, error collection, dry-run mode, and queue support.
-
-## Features
-
-- Memory-efficient chunked reading via `SplFileObject`
-- Row-level validation using Laravel's built-in Validator
-- Detailed error collection with line numbers and `MessageBag` errors
-- Dry-run mode to validate without persisting
-- Column mapping (CSV headers to model attributes)
-- Duplicate row detection via configurable unique column
-- Queue support via `importQueued()`
-- Events fired on start, chunk completion, and finish
-- Configurable delimiter, enclosure, escape character, and encoding
-- Zero dependencies beyond the Laravel framework components
+Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support.
 
 ## Requirements
 
-- PHP ^8.2
-- Laravel ^11.0 or ^12.0
+- PHP 8.2+
+- Laravel 11 or 12
 
 ## Installation
-
-Install via Composer:
 
 ```bash
 composer require philiprehberger/laravel-csv-import
@@ -41,15 +25,13 @@ Optionally publish the config file:
 php artisan vendor:publish --tag=csv-import-config
 ```
 
-## Quick Start
+## Usage
 
 ### 1. Create an Import Handler
 
 Implement `PhilipRehberger\CsvImport\Contracts\ImportHandler`:
 
 ```php
-<?php
-
 namespace App\Imports;
 
 use App\Models\User;
@@ -57,50 +39,29 @@ use PhilipRehberger\CsvImport\Contracts\ImportHandler;
 
 class UserImportHandler implements ImportHandler
 {
-    /**
-     * Laravel validation rules applied to each mapped row.
-     */
     public function rules(): array
     {
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'max:255'],
-            'age'        => ['nullable', 'integer', 'min:0', 'max:150'],
         ];
     }
 
-    /**
-     * Map CSV column headers to attribute names.
-     *
-     * Keys are the exact CSV header strings; values are the attribute names
-     * that your rules() and handle() methods use.
-     */
     public function map(array $row): array
     {
         return [
             'First Name' => 'first_name',
             'Last Name'  => 'last_name',
             'Email'      => 'email',
-            'Age'        => 'age',
         ];
     }
 
-    /**
-     * Persist a single validated, mapped row.
-     *
-     * Only called in non-dry-run mode. Any exception thrown here is caught
-     * and recorded as a row error.
-     */
     public function handle(array $row): void
     {
         User::create($row);
     }
 
-    /**
-     * Return the attribute name to use for in-memory duplicate detection,
-     * or null to disable it.
-     */
     public function uniqueBy(): ?string
     {
         return 'email';
@@ -111,7 +72,6 @@ class UserImportHandler implements ImportHandler
 ### 2. Run the Import
 
 ```php
-use App\Imports\UserImportHandler;
 use PhilipRehberger\CsvImport\CsvImporter;
 
 $result = CsvImporter::make('/path/to/users.csv')
@@ -120,7 +80,6 @@ $result = CsvImporter::make('/path/to/users.csv')
     ->import();
 
 echo "Imported: {$result->successCount}";
-echo "Skipped:  {$result->skippedCount}";
 echo "Errors:   {$result->errorCount}";
 
 if ($result->hasErrors()) {
@@ -130,38 +89,15 @@ if ($result->hasErrors()) {
 }
 ```
 
-### Importing an Uploaded File
-
-```php
-use PhilipRehberger\CsvImport\CsvImporter;
-
-public function store(Request $request): RedirectResponse
-{
-    $result = CsvImporter::fromUpload($request->file('csv'))
-        ->using(UserImportHandler::class)
-        ->import();
-
-    return redirect()->back()->with('result', $result->toArray());
-}
-```
-
 ### Dry-Run Mode
-
-Validates every row and collects errors without persisting anything:
 
 ```php
 $result = CsvImporter::make('/path/to/users.csv')
     ->using(UserImportHandler::class)
     ->dryRun();
-
-if ($result->hasErrors()) {
-    // show errors to the user before they commit to the real import
-}
 ```
 
 ### Queue Support
-
-Dispatch the import as a background job:
 
 ```php
 CsvImporter::make('/path/to/users.csv')
@@ -170,71 +106,49 @@ CsvImporter::make('/path/to/users.csv')
     ->importQueued();
 ```
 
-The job fires the same events as the synchronous import. Listen for
-`ImportCompleted` to react when the job finishes.
+### Importing an Uploaded File
+
+```php
+$result = CsvImporter::fromUpload($request->file('csv'))
+    ->using(UserImportHandler::class)
+    ->import();
+```
 
 ### Changing the Delimiter
 
 ```php
-// Semicolon-separated
 CsvImporter::make($path)
     ->using(MyHandler::class)
     ->delimiter(';')
     ->import();
-
-// Tab-separated
-CsvImporter::make($path)
-    ->using(MyHandler::class)
-    ->delimiter("\t")
-    ->import();
 ```
 
-## Events
+## API
 
-| Event | Payload |
-|-------|---------|
-| `ImportStarted` | `$path`, `$totalRows`, `$isDryRun` |
-| `ImportChunkProcessed` | `$path`, `$chunkIndex`, `$rowsInChunk`, `$successCount`, `$errorCount`, `$skippedCount` |
-| `ImportCompleted` | `$path`, `$result` (ImportResult), `$isDryRun` |
+### CsvImporter (Fluent Builder)
 
-```php
-use PhilipRehberger\CsvImport\Events\ImportCompleted;
+| Method | Description |
+|--------|-------------|
+| `CsvImporter::make(string $path)` | Create an importer from a file path |
+| `CsvImporter::fromUpload(UploadedFile $file)` | Create an importer from an uploaded file |
+| `->using(string $handlerClass)` | Set the import handler class |
+| `->chunkSize(int $size)` | Set chunk size (default: config value) |
+| `->delimiter(string $delimiter)` | Set CSV delimiter |
+| `->enclosure(string $enclosure)` | Set CSV enclosure character |
+| `->import()` | Run import synchronously |
+| `->dryRun()` | Validate all rows without persisting |
+| `->importQueued()` | Dispatch import as a background job |
 
-Event::listen(ImportCompleted::class, function (ImportCompleted $event) {
-    Log::info('Import finished', $event->result->toArray());
-});
-```
+### ImportHandler Interface
 
-## Configuration
+| Method | Description |
+|--------|-------------|
+| `rules(): array` | Laravel validation rules for each mapped row |
+| `map(array $row): array` | Map CSV headers to attribute names |
+| `handle(array $row): void` | Persist a single validated row |
+| `uniqueBy(): ?string` | Attribute name for duplicate detection, or `null` to disable |
 
-After publishing, edit `config/csv-import.php`:
-
-```php
-return [
-    'chunk_size' => 1000,
-    'delimiter'  => ',',
-    'enclosure'  => '"',
-    'escape'     => '\\',
-    'encoding'   => 'UTF-8',
-    'queue'      => [
-        'connection' => null,   // null = default connection
-        'queue'      => 'default',
-    ],
-];
-```
-
-All config values can be overridden at call time using the fluent API:
-
-```php
-CsvImporter::make($path)
-    ->using(MyHandler::class)
-    ->delimiter(';')
-    ->enclosure("'")
-    ->chunkSize(250)
-    ->import();
-```
-
-## ImportResult Reference
+### ImportResult
 
 | Property / Method | Type | Description |
 |-------------------|------|-------------|
@@ -246,21 +160,23 @@ CsvImporter::make($path)
 | `getErrors()` | `RowError[]` | All collected row errors |
 | `toArray()` | `array` | Serialisable summary |
 
-Each `RowError` exposes:
+### Events
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `$lineNumber` | `int` | 1-based line number in the file (header = 1) |
-| `$data` | `array` | The raw CSV row (before mapping) |
-| `$errors` | `MessageBag` | Laravel validation messages |
+| Event | Payload |
+|-------|---------|
+| `ImportStarted` | `$path`, `$totalRows`, `$isDryRun` |
+| `ImportChunkProcessed` | `$path`, `$chunkIndex`, `$rowsInChunk`, `$successCount`, `$errorCount`, `$skippedCount` |
+| `ImportCompleted` | `$path`, `$result` (ImportResult), `$isDryRun` |
 
-## Testing
+## Development
 
 ```bash
 composer install
 vendor/bin/phpunit
+vendor/bin/pint --test
+vendor/bin/phpstan analyse
 ```
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT
