@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-22
+
+### Added
+- `onChunkComplete(callable $callback)` method for progress tracking — callback receives chunk index, processed rows, success count, and error count
+- `transformColumn(string $column, callable $transformer)` method for pre-validation column transforms
+
 ## [1.0.2] - 2026-03-17
 
 ### Changed

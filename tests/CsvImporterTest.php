@@ -279,6 +279,74 @@ final class CsvImporterTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
+    // Chunk complete callback
+    // -----------------------------------------------------------------------
+
+    public function test_on_chunk_complete_callback_receives_correct_counts(): void
+    {
+        $calls = [];
+
+        $result = CsvImporter::make($this->fixturePath('users_invalid.csv'))
+            ->using(UserImportHandler::class)
+            ->chunkSize(4)
+            ->onChunkComplete(function (int $chunkIndex, int $processedRows, int $successCount, int $errorCount) use (&$calls) {
+                $calls[] = compact('chunkIndex', 'processedRows', 'successCount', 'errorCount');
+            })
+            ->import();
+
+        $this->assertCount(1, $calls);
+        $this->assertSame(0, $calls[0]['chunkIndex']);
+        $this->assertSame(4, $calls[0]['processedRows']);
+        $this->assertSame(2, $calls[0]['successCount']);
+        $this->assertSame(2, $calls[0]['errorCount']);
+    }
+
+    public function test_on_chunk_complete_callback_fires_once_per_chunk(): void
+    {
+        $callCount = 0;
+
+        CsvImporter::make($this->fixturePath('users.csv'))
+            ->using(UserImportHandler::class)
+            ->chunkSize(2)
+            ->onChunkComplete(function () use (&$callCount) {
+                $callCount++;
+            })
+            ->import();
+
+        $this->assertSame(2, $callCount);
+    }
+
+    // -----------------------------------------------------------------------
+    // Column transforms
+    // -----------------------------------------------------------------------
+
+    public function test_transform_column_applies_transform_before_validation(): void
+    {
+        $result = CsvImporter::make($this->fixturePath('users.csv'))
+            ->using(UserImportHandler::class)
+            ->transformColumn('first_name', fn (string $value) => strtoupper($value))
+            ->transformColumn('email', fn (string $value) => strtolower($value))
+            ->import();
+
+        $this->assertFalse($result->hasErrors());
+        $this->assertSame(4, $result->successCount);
+        $this->assertSame('JOHN', UserImportHandler::$persisted[0]['first_name']);
+        $this->assertSame('john@example.com', UserImportHandler::$persisted[0]['email']);
+        $this->assertSame('ALICE', UserImportHandler::$persisted[3]['first_name']);
+    }
+
+    public function test_transform_column_ignores_missing_columns(): void
+    {
+        $result = CsvImporter::make($this->fixturePath('users.csv'))
+            ->using(UserImportHandler::class)
+            ->transformColumn('nonexistent', fn (string $value) => strtoupper($value))
+            ->import();
+
+        $this->assertFalse($result->hasErrors());
+        $this->assertSame(4, $result->successCount);
+    }
+
+    // -----------------------------------------------------------------------
     // Guard clauses and fluent API
     // -----------------------------------------------------------------------
 

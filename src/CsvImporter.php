@@ -32,6 +32,12 @@ final class CsvImporter
 
     private string $encoding;
 
+    /** @var callable|null */
+    private $onChunkCompleteCallback;
+
+    /** @var array<string, callable> */
+    private array $columnTransformers = [];
+
     private function __construct(string $path)
     {
         $this->path = $path;
@@ -154,6 +160,34 @@ final class CsvImporter
     }
 
     /**
+     * Register a callback that fires after each chunk is processed.
+     *
+     * The callback receives (int $chunkIndex, int $processedRows, int $successCount, int $errorCount).
+     */
+    public function onChunkComplete(callable $callback): self
+    {
+        $clone = clone $this;
+        $clone->onChunkCompleteCallback = $callback;
+
+        return $clone;
+    }
+
+    /**
+     * Register a transformer for a specific column.
+     *
+     * The transformer is applied after column mapping but before validation
+     * and handling. The callable receives the column value and must return
+     * the transformed value.
+     */
+    public function transformColumn(string $column, callable $transformer): self
+    {
+        $clone = clone $this;
+        $clone->columnTransformers[$column] = $transformer;
+
+        return $clone;
+    }
+
+    /**
      * Run the import synchronously, persisting valid rows.
      */
     public function import(): ImportResult
@@ -228,6 +262,9 @@ final class CsvImporter
                 // Apply column mapping.
                 $mappedRow = $this->applyMapping($handler, $rawRow);
 
+                // Apply column transforms.
+                $mappedRow = $this->applyColumnTransforms($mappedRow);
+
                 // Duplicate detection.
                 if ($uniqueColumn !== null && isset($mappedRow[$uniqueColumn])) {
                     $uniqueValue = $mappedRow[$uniqueColumn];
@@ -287,6 +324,15 @@ final class CsvImporter
                 errorCount: $chunkErrors,
                 skippedCount: $chunkSkipped,
             ));
+
+            if ($this->onChunkCompleteCallback !== null) {
+                ($this->onChunkCompleteCallback)(
+                    $chunkIndex,
+                    count($chunk),
+                    $chunkSuccess,
+                    $chunkErrors,
+                );
+            }
         }
 
         Event::dispatch(new ImportCompleted($this->path, $result, $dryRun));
@@ -321,6 +367,23 @@ final class CsvImporter
         }
 
         return $mapped;
+    }
+
+    /**
+     * Apply registered column transformers to a mapped row.
+     *
+     * @param  array<string, string>  $row
+     * @return array<string, string>
+     */
+    private function applyColumnTransforms(array $row): array
+    {
+        foreach ($this->columnTransformers as $column => $transformer) {
+            if (array_key_exists($column, $row)) {
+                $row[$column] = $transformer($row[$column]);
+            }
+        }
+
+        return $row;
     }
 
     private function buildReader(): CsvReader
