@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/laravel-csv-import/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/laravel-csv-import/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-csv-import.svg)](https://packagist.org/packages/philiprehberger/laravel-csv-import)
 [![License](https://img.shields.io/github/license/philiprehberger/laravel-csv-import)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support.
 
