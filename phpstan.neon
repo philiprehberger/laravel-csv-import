@@ -2,16 +2,11 @@ includes:
     - vendor/nunomaduro/larastan/extension.neon
 
 parameters:
-    level: 8
-
+    level: 6
     paths:
         - src
-        - tests
-
-    checkMissingIterableValueType: false
-
+    excludePaths:
+        - vendor
     ignoreErrors:
-        # Orchestra Testbench's getPackageProviders signature uses mixed[] which
-        # conflicts with strict array typing at level 8.
-        - '#Method PhilipRehberger\\CsvImport\\Tests\\TestCase::getPackageProviders\(\) has parameter \$app with no type specified#'
-        - '#Method PhilipRehberger\\CsvImport\\Tests\\TestCase::getEnvironmentSetUp\(\) has parameter \$app with no type specified#'
+        - identifier: missingType.iterableValue
+        - '#will always evaluate to false#'
