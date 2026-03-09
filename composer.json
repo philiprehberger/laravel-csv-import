@@ -1,0 +1,56 @@
+{
+    "name": "philiprehberger/laravel-csv-import",
+    "description": "Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "csv",
+        "import",
+        "queue",
+        "validation"
+    ],
+    "authors": [
+        {
+            "name": "Philip Rehberger",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/bus": "^11.0|^12.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/queue": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/validation": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^1.12",
+        "nunomaduro/larastan": "^2.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhilipRehberger\\CsvImport\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhilipRehberger\\CsvImport\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "PhilipRehberger\\CsvImport\\CsvImportServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
