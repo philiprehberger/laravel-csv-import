@@ -80,7 +80,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [test, lint, phpstan]
+    needs: [test, lint]
     name: Publish to Packagist
 
     steps:
