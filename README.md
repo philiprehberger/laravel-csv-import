@@ -254,11 +254,13 @@ Each `RowError` exposes:
 | `$data` | `array` | The raw CSV row (before mapping) |
 | `$errors` | `MessageBag` | Laravel validation messages |
 
-## Testing
+## Development
 
 ```bash
 composer install
 vendor/bin/phpunit
+vendor/bin/pint --test
+vendor/bin/phpstan analyse
 ```
 
 ## License
