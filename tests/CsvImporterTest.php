@@ -10,6 +10,7 @@ use PhilipRehberger\CsvImport\CsvImporter;
 use PhilipRehberger\CsvImport\Events\ImportChunkProcessed;
 use PhilipRehberger\CsvImport\Events\ImportCompleted;
 use PhilipRehberger\CsvImport\Events\ImportStarted;
+use PhilipRehberger\CsvImport\RowError;
 use PhilipRehberger\CsvImport\Tests\Support\NoMappingHandler;
 use PhilipRehberger\CsvImport\Tests\Support\UserImportHandler;
 use PhilipRehberger\CsvImport\Tests\Support\UserImportHandlerWithUnique;
@@ -98,7 +99,7 @@ final class CsvImporterTest extends TestCase
             ->import();
 
         $error = $result->getErrors()[0];
-        $this->assertInstanceOf(\PhilipRehberger\CsvImport\RowError::class, $error);
+        $this->assertInstanceOf(RowError::class, $error);
         $this->assertFalse($error->errors->isEmpty());
         $this->assertIsArray($error->data);
     }
