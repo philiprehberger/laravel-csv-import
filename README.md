@@ -4,7 +4,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-csv-import.svg)](https://packagist.org/packages/philiprehberger/laravel-csv-import)
 [![License](https://img.shields.io/github/license/philiprehberger/laravel-csv-import)](LICENSE)
 
-Chunked CSV import for Laravel with row-level validation, error collection, dry-run mode, and queue support.
+Chunked CSV import with row-level validation, error collection, dry-run mode, and queue support.
 
 ## Requirements
 
