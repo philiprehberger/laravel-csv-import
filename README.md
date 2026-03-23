@@ -114,6 +114,30 @@ $result = CsvImporter::fromUpload($request->file('csv'))
     ->import();
 ```
 
+### Progress Tracking
+
+```php
+$result = CsvImporter::make('/path/to/users.csv')
+    ->using(UserImportHandler::class)
+    ->chunkSize(500)
+    ->onChunkComplete(function (int $chunkIndex, int $processedRows, int $successCount, int $errorCount) {
+        echo "Chunk {$chunkIndex}: {$processedRows} rows, {$successCount} ok, {$errorCount} failed\n";
+    })
+    ->import();
+```
+
+### Column Transforms
+
+Apply transformations to mapped columns before validation:
+
+```php
+$result = CsvImporter::make('/path/to/users.csv')
+    ->using(UserImportHandler::class)
+    ->transformColumn('email', fn (string $value) => strtolower($value))
+    ->transformColumn('first_name', fn (string $value) => trim($value))
+    ->import();
+```
+
 ### Changing the Delimiter
 
 ```php
@@ -135,6 +159,8 @@ CsvImporter::make($path)
 | `->chunkSize(int $size)` | Set chunk size (default: config value) |
 | `->delimiter(string $delimiter)` | Set CSV delimiter |
 | `->enclosure(string $enclosure)` | Set CSV enclosure character |
+| `->onChunkComplete(callable $callback)` | Register a per-chunk progress callback |
+| `->transformColumn(string $column, callable $transformer)` | Register a pre-validation column transformer |
 | `->import()` | Run import synchronously |
 | `->dryRun()` | Validate all rows without persisting |
 | `->importQueued()` | Dispatch import as a background job |
